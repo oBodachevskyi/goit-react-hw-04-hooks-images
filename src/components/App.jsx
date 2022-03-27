@@ -50,17 +50,12 @@ class App extends Component {
     showModal: true})  
   }
 
-  OnModalClick = e => {
-    if(e.target === e.currentTarget) {
-      this.setState({showModal: false})
-    }
-  }
-
-  handleKeyDown = e => {
-    if (e.code === 'Escape' && this.state.showModal === true) {     
-      this.setState({showModal: false})
-    }
+  toggleModal = () => {
+    this.setState(({ showModal }) => ({
+      showModal: !showModal,
+    }));
   };
+ 
 
   render () {
     const stateValue = this.state;
@@ -89,7 +84,7 @@ class App extends Component {
       {stateValue.showModal &&
       <Modal 
       imageForModal={stateValue.largeImgForModal} 
-      onClick={this.OnModalClick}/>}
+      onClose={this.toggleModal}/>}
 
       </div>
     );
