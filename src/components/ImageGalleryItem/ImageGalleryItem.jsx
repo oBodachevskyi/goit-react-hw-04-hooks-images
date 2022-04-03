@@ -6,7 +6,6 @@ const ImageGalleryItem = ({imageArray, onClick}) => {
   
     return (<>
      {imageArray.map(({id, webformatURL}) => {
-       /*   console.log(image) */
          return (<li onClick={onClick} key={id} id={id} className={css.imageGalleryItem}>
          <img 
          src={webformatURL} 

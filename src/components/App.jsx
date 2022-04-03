@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useEffect, useState } from 'react';
 import fetchImages from '../service/fetchImages';
 import css from 'components/App.module.css';
 import Searchbar from 'components/Searchbar/Searchbar'; 
@@ -7,88 +7,83 @@ import Button from 'components/Button/Button';
 import Modal from 'components/Modal/Modal';
 import { SpinnerRoundFilled } from 'spinners-react';
 
-class App extends Component {
- state = {
-   searchingImgName:'',
-   images: null,
-   numberPage: 1,
-   largeImgForModal:'',
-   showModal:false,
-   spinerView: false
+
+
+export default function App() {
+ const[searchingImgName, setSearchingImgName] = useState('');
+ const [images, setImages] = useState(null);
+ const [numberPage, setNumberPage] = useState(1);
+ const [largeImgForModal, setLargeImgForModal] = useState('');
+ const [showModal, setShowModal] = useState(false);
+ const [spinerView, setSpinerView] = useState(false)
+
+
+const handleForSubmit = (searchingImgName) => {   
+  setSearchingImgName(searchingImgName)
 }
 
- componentDidUpdate (prevState, prevProps) { 
+useEffect(() => {
+  if (!searchingImgName) {
+    return
+  }
+  setSpinerView(true) 
+  fetchImages(searchingImgName, 1)
+  .then(res => res.json())
+  .then(imagesRender => {
+    setImages(imagesRender.hits);
+    setNumberPage(1);
+    setSpinerView(false)
+  }); 
+}, [searchingImgName])
 
- if (prevProps.searchingImgName !== this.state.searchingImgName) {
-      this.setState({spinerView: true}) 
-      fetchImages(this.state.searchingImgName, 1)
-      .then(res => res.json())
-      .then(imagesRender => this.setState({images: imagesRender.hits, numberPage: 1,  spinerView: false })); 
-  } 
-  window.addEventListener('keydown', this.handleKeyDown);
+const onImageClick = e => { 
+  setLargeImgForModal((images.find(image => image.id === Number(e.currentTarget.id))).largeImageURL)   
+  setShowModal(true)
 }
 
-  onButtonClikRender = (e) => {
-      const searchName = this.state.searchingImgName;
-      const searchPage = this.state.numberPage + 1; 
-
-    this.setState({spinerView: true}) 
-     fetchImages(searchName, searchPage)
-      .then(res => res.json())
-      .then((imagesNext) => (this.setState({images: [...this.state.images, ...imagesNext.hits], 
-              numberPage: searchPage, spinerView: false}) )
-      );   
-  }
-
-  handleForSubmit = (searchingImgName) => {   
-    this.setState({searchingImgName})
-  }
-
-  onImageClick = e => { 
-    const stateForBigImg = this.state.images
-    this.setState({largeImgForModal: (stateForBigImg.find(image => image.id === Number(e.currentTarget.id))).largeImageURL,
-    showModal: true})  
-  }
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
-  };
- 
-
-  render () {
-    const stateValue = this.state;
-  
-    return (
-      <div className={css.app}>
-
-      <Searchbar        
-       onSubmit={this.handleForSubmit}></Searchbar>
-      
-      <ImageGallery 
-      value={stateValue.searchingImgName} 
-      renderArray={stateValue.images} 
-      onClick={this.onImageClick}/>
-
-      {(stateValue.spinerView) && 
-      <SpinnerRoundFilled 
-      size={90} 
-      thickness={87} 
-      speed={98} 
-      color="rgba(63, 81, 181, 1)" />}  
-
-      {stateValue.images !== null && 
-      <Button onClick={this.onButtonClikRender} />}
-       
-      {stateValue.showModal &&
-      <Modal 
-      imageForModal={stateValue.largeImgForModal} 
-      onClose={this.toggleModal}/>}
-
-      </div>
-    );
-  }
+const toggleModal = () => {  
+ setShowModal(!showModal);
 };
+  
+const  onButtonClikRender = (e) => {
+  const searchPage = numberPage + 1; 
+  
+  setSpinerView(true) 
+    fetchImages(searchingImgName, searchPage)
+    .then(res => res.json())
+    .then((imagesNext) => {
+      setImages([...images, ...imagesNext.hits]);
+      setNumberPage(searchPage);
+      setSpinerView(false);
+    })         
+  }
 
-export default App
+  return (
+    <div className={css.app}>
+
+    <Searchbar        
+     onSubmit={handleForSubmit}></Searchbar>
+    
+     <ImageGallery 
+    renderArray={images} 
+    onClick={onImageClick}/>
+
+    {(spinerView) && 
+    <SpinnerRoundFilled 
+    size={90} 
+    thickness={87} 
+    speed={98} 
+    color="rgba(63, 81, 181, 1)" />}  
+
+    {images !== null && 
+    <Button onClick={onButtonClikRender} />}
+     
+    {showModal &&
+    <Modal 
+    imageForModal={largeImgForModal} 
+    onClose={toggleModal}/>} 
+
+    </div>
+  )
+}
+
